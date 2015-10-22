@@ -19,7 +19,7 @@ func TestGetServer(t *testing.T) {
 	req, err := http.NewRequest("GET", "/", nil)
 	assert.Nil(t, err, "Could not create new GET / request")
 
-	// recording a single request
+	// serving up a single request and recording the response
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
