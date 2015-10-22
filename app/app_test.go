@@ -12,14 +12,18 @@ func TestAdd(t *testing.T) {
 }
 
 func TestGetServer(t *testing.T) {
+	// fetching the request router
 	r := getHandler()
 
+	// generating a request to test it
 	req, err := http.NewRequest("GET", "/", nil)
 	assert.Nil(t, err, "Could not create new GET / request")
 
+	// recording a single request
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
+	// asserting that it worked properly
 	assert.Equal(t, 200, w.Code, "Response code was not 200")
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
