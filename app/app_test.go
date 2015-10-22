@@ -24,6 +24,6 @@ func TestGetServer(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	// asserting that it worked properly
-	assert.Equal(t, 200, w.Code, "Response code was not 200")
+	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
