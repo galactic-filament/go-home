@@ -1,0 +1,8 @@
+web:
+  image: ihsw/go-home
+  command: ./bin/app
+  ports:
+    - 80:80
+test:
+  image: ihsw/go-home
+  command: go test github.com/ihsw/go-home/app/...
