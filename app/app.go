@@ -1,12 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/gorilla/mux"
+	"net/http"
+)
 
-// Add combines two numbers
-func Add(x int, y int) int {
+func add(x int, y int) int {
 	return x + y
 }
 
+func getHandler() *mux.Router {
+	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, "Hello, world!")
+	})
+	return r
+}
+
 func main() {
-	fmt.Printf("Hello, world!\n")
+	http.ListenAndServe(":80", getHandler())
 }

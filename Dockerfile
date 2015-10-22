@@ -1,8 +1,9 @@
 FROM golang
 
-COPY ./app /srv/app
-WORKDIR /srv/app
+EXPOSE 80
 
-RUN go build -v
+ADD ./app ./src/github.com/ihsw/go-home/app
+RUN go get ./... \
+  && go install github.com/ihsw/go-home/app
 
-CMD ["./app"]
+CMD ["./bin/app"]
