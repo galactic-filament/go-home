@@ -4,5 +4,7 @@ go:
   - 1.5
   - tip
 
+before_script:
+  - go vet github.com/ihsw/go-home/app/...
 script:
   - go test github.com/ihsw/go-home/app
