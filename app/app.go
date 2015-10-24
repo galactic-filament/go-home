@@ -30,5 +30,11 @@ func loggingMiddleware(h http.Handler) http.Handler {
 
 func main() {
 	log.Info("Starting up")
-	http.ListenAndServe(":80", loggingMiddleware(getHandler()))
+
+	err := http.ListenAndServe(":80", loggingMiddleware(getHandler()))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Fatal("Could not listen on 80")
+	}
 }
