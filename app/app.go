@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -18,6 +19,16 @@ func getHandler() *mux.Router {
 	return r
 }
 
+func loggingMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		log.WithFields(log.Fields{
+			"url": req.URL,
+		}).Info("Url hit")
+		h.ServeHTTP(w, req)
+	})
+}
+
 func main() {
-	http.ListenAndServe(":80", getHandler())
+	log.Info("Starting up")
+	http.ListenAndServe(":80", loggingMiddleware(getHandler()))
 }
