@@ -1,8 +1,11 @@
-web:
+base:
   image: ihsw/go-home
-  command: ./bin/app
+web:
+  extends:
+    service: base
   ports:
     - 80:80
 test:
-  image: ihsw/go-home
+  extends:
+    service: base
   command: go test github.com/ihsw/go-home/app/...
