@@ -16,6 +16,9 @@ func getHandler() *mux.Router {
 	r.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Hello, world!")
 	})
+	r.HandleFunc("/ping", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, "Pong")
+	})
 	return r
 }
 
