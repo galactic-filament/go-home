@@ -1,5 +1,8 @@
 base:
   image: ihsw/go-home
+web-test:
+  extends:
+    service: base
 web:
   extends:
     service: base
