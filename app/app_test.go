@@ -62,6 +62,7 @@ func TestReflection(t *testing.T) {
 
 	// asserting that it worked properly
 	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
+	assert.Equal(t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
 
 	// aserting that the request and response match
 	var responseGreeting greeting

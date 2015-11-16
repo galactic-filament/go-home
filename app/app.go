@@ -29,6 +29,8 @@ func getHandler() *mux.Router {
 		fmt.Fprintf(w, "Pong")
 	})
 	r.HandleFunc("/reflection", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
 		var greeting greeting
 		if err := json.NewDecoder(req.Body).Decode(&greeting); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
