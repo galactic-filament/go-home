@@ -3,19 +3,23 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestHomepage(t *testing.T) {
+func testRequest(t *testing.T, method string, dest string, body io.Reader) *httptest.ResponseRecorder {
 	// fetching the request router
 	r := getHandler()
 
 	// generating a request to test it
-	req, err := http.NewRequest("GET", "/", nil)
-	assert.Nil(t, err, "Could not create new GET / request")
+	req, err := http.NewRequest(method, dest, body)
+	assert.Nil(t, err,
+		fmt.Sprintf("Could not create new %s %s request", method, dest),
+	)
 
 	// serving up a single request and recording the response
 	w := httptest.NewRecorder()
@@ -23,48 +27,39 @@ func TestHomepage(t *testing.T) {
 
 	// asserting that it worked properly
 	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
+	return w
+}
+
+func testGetRequest(t *testing.T, dest string) *httptest.ResponseRecorder {
+	return testRequest(t, "GET", dest, nil)
+}
+
+func testPostRequest(t *testing.T, dest string, payload io.Reader) *httptest.ResponseRecorder {
+	w := testRequest(t, "POST", dest, payload)
+	assert.Equal(t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
+	return w
+}
+
+func TestHomepage(t *testing.T) {
+	w := testGetRequest(t, "/")
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
 
 func TestPing(t *testing.T) {
-	// fetching the request router
-	r := getHandler()
-
-	// generating a request to test it
-	req, err := http.NewRequest("GET", "/ping", nil)
-	assert.Nil(t, err, "Could not create new GET /ping request")
-
-	// serving up a single request and recording the response
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// asserting that it worked properly
-	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
+	w := testGetRequest(t, "/ping")
 	assert.Equal(t, "Pong", w.Body.String())
 }
 
 func TestReflection(t *testing.T) {
-	// fetching the request router
-	r := getHandler()
-
 	// generating a request payload
 	requestGreeting := greeting{Greeting: "Hello, world!"}
 	payload, err := json.Marshal(requestGreeting)
 	assert.Nil(t, err, "Could not marshal greeting")
 
-	// generating a request to test it
-	req, err := http.NewRequest("POST", "/reflection", bytes.NewBuffer(payload))
-	assert.Nil(t, err, "Could not create new POST /reflection request")
+	// requesting
+	w := testPostRequest(t, "/reflection", bytes.NewBuffer(payload))
 
-	// serving up a single request and recording the response
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// asserting that it worked properly
-	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
-	assert.Equal(t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
-
-	// aserting that the request and response match
+	// asserting that the request and response match
 	var responseGreeting greeting
 	err = json.NewDecoder(w.Body).Decode(&responseGreeting)
 	assert.Nil(t, err, "Could not decode response body")
