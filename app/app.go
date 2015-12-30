@@ -43,7 +43,7 @@ func getHandler() *mux.Router {
 			fmt.Fprintf(w, "Could not encode response body")
 			return
 		}
-	})
+	}).Methods("POST")
 	return r
 }
 
