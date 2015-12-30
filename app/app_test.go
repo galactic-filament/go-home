@@ -4,16 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
+var db *sqlx.DB
+
 func testRequest(t *testing.T, method string, dest string, body io.Reader) *httptest.ResponseRecorder {
 	// fetching the request router
-	r := getHandler()
+	r := getHandler(db)
 
 	// generating a request to test it
 	req, err := http.NewRequest(method, dest, body)
@@ -38,6 +44,15 @@ func testPostRequest(t *testing.T, dest string, payload io.Reader) *httptest.Res
 	w := testRequest(t, "POST", dest, payload)
 	assert.Equal(t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
 	return w
+}
+
+func TestMain(m *testing.M) {
+	var err error
+	db, err = sqlx.Connect("postgres", "postgres://postgres@db/postgres?sslmode=disable")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	os.Exit(m.Run())
 }
 
 func TestHomepage(t *testing.T) {

@@ -1,14 +1,23 @@
+db:
+  image: ihsw/go-home-db
+
 base:
   image: ihsw/go-home
-web-test:
-  extends:
-    service: base
-web:
-  extends:
-    service: base
-  ports:
-    - 80:80
-test:
+  environment:
+    - ENV=local
+test-base:
   extends:
     service: base
   command: go test github.com/ihsw/go-home/app/...
+
+web-test:
+  extends:
+    service: base
+  links:
+    - db
+
+test:
+  extends:
+    service: test-base
+  links:
+    - db

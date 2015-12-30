@@ -6,6 +6,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"net/http"
 )
@@ -20,7 +21,7 @@ type customReader struct {
 
 func (r customReader) Close() error { return nil }
 
-func getHandler() *mux.Router {
+func getHandler(db *sqlx.DB) *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Hello, world!")
@@ -76,7 +77,12 @@ func loggingMiddleware(h http.Handler) http.Handler {
 func main() {
 	log.Info("Starting up")
 
-	err := http.ListenAndServe(":80", loggingMiddleware(getHandler()))
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=postgres host=db")
+	if err != nil {
+		log.Fatal("Could not connect to db")
+	}
+
+	err = http.ListenAndServe(":80", loggingMiddleware(getHandler(db)))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
