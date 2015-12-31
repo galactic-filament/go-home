@@ -15,11 +15,34 @@ type greeting struct {
 	Greeting string `json:"greeting"`
 }
 
+type post struct {
+	Body string `json:"body"`
+}
+
+type postsResponse struct {
+	ID int `json:"id"`
+}
+
 type customReader struct {
 	*bytes.Buffer
 }
 
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
 func (r customReader) Close() error { return nil }
+
+func writeJSONErrorResponse(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	errResponse := errorResponse{Error: err.Error()}
+	if err := json.NewEncoder(w).Encode(errResponse); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Could not encode error response body")
+		return
+	}
+	return
+}
 
 func getHandler(db *sqlx.DB) *mux.Router {
 	r := mux.NewRouter()
@@ -32,16 +55,46 @@ func getHandler(db *sqlx.DB) *mux.Router {
 	r.HandleFunc("/reflection", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
+		// decoding the request body
 		var greeting greeting
 		if err := json.NewDecoder(req.Body).Decode(&greeting); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "Could not decode request body")
+			writeJSONErrorResponse(w, err)
 			return
 		}
 
+		// writing out the response
 		if err := json.NewEncoder(w).Encode(greeting); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not encode response body")
+			writeJSONErrorResponse(w, err)
+			return
+		}
+	}).Methods("POST")
+	r.HandleFunc("/posts", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		// decoding the request body
+		var post post
+		if err := json.NewDecoder(req.Body).Decode(&post); err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+
+		// inserting the post and fetching the resulting id
+		stmt, err := db.PrepareNamed("INSERT INTO posts (body) VALUES (:body) RETURNING id")
+		if err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+		row := stmt.QueryRow(post)
+		var id int
+		if err := row.Scan(&id); err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+
+		// writing out the response
+		responseBody := postsResponse{ID: id}
+		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
+			writeJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("POST")
