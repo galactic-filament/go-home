@@ -10,5 +10,6 @@ env:
   - ENV=travis
 before_script:
   - go vet github.com/ihsw/go-home/app/...
+  - psql -f ./db/container-files/docker-entrypoint-initdb.d/db.sql -U postgres
 script:
   - go test github.com/ihsw/go-home/app/...
