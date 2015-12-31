@@ -47,8 +47,16 @@ func testPostRequest(t *testing.T, dest string, payload io.Reader) *httptest.Res
 }
 
 func TestMain(m *testing.M) {
+	hostname := "db"
+	if os.Getenv("ENV") == "travis" {
+		hostname = "localhost"
+	}
+
 	var err error
-	db, err = sqlx.Connect("postgres", "postgres://postgres@db/postgres?sslmode=disable")
+	db, err = sqlx.Connect(
+		"postgres",
+		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", hostname),
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
