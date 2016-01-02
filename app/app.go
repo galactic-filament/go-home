@@ -7,6 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"io/ioutil"
 	"net/http"
 )
@@ -130,9 +131,12 @@ func loggingMiddleware(h http.Handler) http.Handler {
 func main() {
 	log.Info("Starting up")
 
-	db, err := sqlx.Connect("postgres", "user=postgres dbname=postgres host=db")
+	db, err := sqlx.Connect(
+		"postgres",
+		"postgres://postgres@db/postgres?sslmode=disable",
+	)
 	if err != nil {
-		log.Fatal("Could not connect to db")
+		log.Fatal(err.Error())
 	}
 
 	err = http.ListenAndServe(":80", loggingMiddleware(getHandler(db)))
