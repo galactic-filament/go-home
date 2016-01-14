@@ -15,17 +15,19 @@ import (
 	"testing"
 )
 
-var db *sqlx.DB
+// test handler
+type testHandler struct {
+	db *sqlx.DB
+	t  *testing.T
+}
 
-func testRequest(t *testing.T, method string, dest string, body io.Reader) *httptest.ResponseRecorder {
+func (th testHandler) testRequest(method string, dest string, body io.Reader) *httptest.ResponseRecorder {
 	// fetching the request router
-	r := getHandler(db)
+	r := getHandler(th.db)
 
 	// generating a request to test it
 	req, err := http.NewRequest(method, dest, body)
-	assert.Nil(t, err,
-		fmt.Sprintf("Could not create new %s %s request", method, dest),
-	)
+	assert.Nil(th.t, err, fmt.Sprintf("Could not create new %s %s request", method, dest))
 
 	// serving up a single request and recording the response
 	w := httptest.NewRecorder()
@@ -35,26 +37,30 @@ func testRequest(t *testing.T, method string, dest string, body io.Reader) *http
 	if w.Code == http.StatusInternalServerError {
 		var errResponse errorResponse
 		err = json.NewDecoder(w.Body).Decode(&errResponse)
-		assert.Nil(t, err, "Could not decode response body")
-		assert.NotNil(t, nil, fmt.Sprintf("Response code was 500: %s", errResponse.Error))
+		assert.Nil(th.t, err, "Could not decode response body")
+		assert.NotNil(th.t, nil, fmt.Sprintf("Response code was 500: %s", errResponse.Error))
 		return w
 	}
 
 	// asserting that it worked properly
-	assert.Equal(t, http.StatusOK, w.Code, "Response code was not 200")
+	assert.Equal(th.t, http.StatusOK, w.Code, "Response code was not 200")
 	return w
 }
 
-func testGetRequest(t *testing.T, dest string) *httptest.ResponseRecorder {
-	return testRequest(t, "GET", dest, nil)
+func (th testHandler) testGetRequest(dest string) *httptest.ResponseRecorder {
+	return th.testRequest("GET", dest, nil)
 }
 
-func testPostRequest(t *testing.T, dest string, payload io.Reader) *httptest.ResponseRecorder {
-	w := testRequest(t, "POST", dest, payload)
-	assert.Equal(t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
+func (th testHandler) testPostRequest(dest string, payload io.Reader) *httptest.ResponseRecorder {
+	w := th.testRequest("POST", dest, payload)
+	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
 	return w
 }
 
+// global test handler
+var th testHandler
+
+// main
 func TestMain(m *testing.M) {
 	hostname := "db"
 	if os.Getenv("ENV") == "travis" {
@@ -62,7 +68,7 @@ func TestMain(m *testing.M) {
 	}
 
 	var err error
-	db, err = sqlx.Connect(
+	th.db, err = sqlx.Connect(
 		"postgres",
 		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", hostname),
 	)
@@ -72,24 +78,36 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// actual tests
 func TestHomepage(t *testing.T) {
-	w := testGetRequest(t, "/")
+	// update the test handler with the test runner
+	th.t = t
+
+	// attempt a request
+	w := th.testGetRequest("/")
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
 
 func TestPing(t *testing.T) {
-	w := testGetRequest(t, "/ping")
+	// update the test handler with the test runner
+	th.t = t
+
+	// attempt a request
+	w := th.testGetRequest("/ping")
 	assert.Equal(t, "Pong", w.Body.String())
 }
 
 func TestReflection(t *testing.T) {
+	// update the test handler with the test runner
+	th.t = t
+
 	// generating a request payload
 	requestGreeting := greeting{Greeting: "Hello, world!"}
 	payload, err := json.Marshal(requestGreeting)
 	assert.Nil(t, err, "Could not marshal greeting")
 
 	// requesting
-	w := testPostRequest(t, "/reflection", bytes.NewBuffer(payload))
+	w := th.testPostRequest("/reflection", bytes.NewBuffer(payload))
 
 	// asserting that the request and response match
 	var responseGreeting greeting
@@ -99,13 +117,16 @@ func TestReflection(t *testing.T) {
 }
 
 func TestPosts(t *testing.T) {
+	// update the test handler with the test runner
+	th.t = t
+
 	// generating a request payload
 	requestPost := post{Body: "Hello, world!"}
 	payload, err := json.Marshal(requestPost)
 	assert.Nil(t, err, "Could not marshal post")
 
 	// requesting
-	w := testPostRequest(t, "/posts", bytes.NewBuffer(payload))
+	w := th.testPostRequest("/posts", bytes.NewBuffer(payload))
 
 	// asserting that the post id is returned
 	var postsResponse postsResponse
