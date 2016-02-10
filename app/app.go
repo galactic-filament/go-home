@@ -16,12 +16,13 @@ type greeting struct {
 	Greeting string `json:"greeting"`
 }
 
-type post struct {
+type postRequest struct {
 	Body string `json:"body"`
 }
 
-type postsResponse struct {
-	ID int `json:"id"`
+type post struct {
+	ID   int    `json:"id"`
+	Body string `json:"body"`
 }
 
 type customReader struct {
@@ -73,8 +74,8 @@ func getHandler(db *sqlx.DB) *mux.Router {
 		w.Header().Set("Content-type", "application/json")
 
 		// decoding the request body
-		var post post
-		if err := json.NewDecoder(req.Body).Decode(&post); err != nil {
+		var postRequest postRequest
+		if err := json.NewDecoder(req.Body).Decode(&postRequest); err != nil {
 			writeJSONErrorResponse(w, err)
 			return
 		}
@@ -85,7 +86,7 @@ func getHandler(db *sqlx.DB) *mux.Router {
 			writeJSONErrorResponse(w, err)
 			return
 		}
-		row := stmt.QueryRow(post)
+		row := stmt.QueryRow(postRequest)
 		var id int
 		if err := row.Scan(&id); err != nil {
 			writeJSONErrorResponse(w, err)
@@ -93,12 +94,38 @@ func getHandler(db *sqlx.DB) *mux.Router {
 		}
 
 		// writing out the response
-		responseBody := postsResponse{ID: id}
+		responseBody := post{ID: id, Body: postRequest.Body}
 		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 			writeJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("POST")
+	r.HandleFunc("/post/{id:[0-9]+}", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		// fetching the url vars
+		vars := mux.Vars(req)
+		id := vars["id"]
+
+		// query for the post
+		stmt, err := db.Preparex("SELECT id, body FROM posts WHERE id = $1")
+		if err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+		var post post
+		err = stmt.Get(&post, id)
+		if err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+
+		// writing out the response
+		if err := json.NewEncoder(w).Encode(post); err != nil {
+			writeJSONErrorResponse(w, err)
+			return
+		}
+	}).Methods("GET")
 	return r
 }
 
