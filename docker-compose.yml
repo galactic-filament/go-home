@@ -8,7 +8,7 @@ base:
 test-base:
   extends:
     service: base
-  command: go test github.com/ihsw/go-home/app/...
+  command: ./src/github.com/ihsw/go-home/app/bin/run-tests
 
 web-test:
   extends:
