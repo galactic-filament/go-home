@@ -6,6 +6,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/ihsw/go-home/app/PostManager"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"io/ioutil"
@@ -48,6 +49,8 @@ func writeJSONErrorResponse(w http.ResponseWriter, err error) {
 
 func getHandler(db *sqlx.DB) *mux.Router {
 	r := mux.NewRouter()
+
+	// misc route endpoints
 	r.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Hello, world!")
 	})
@@ -70,70 +73,20 @@ func getHandler(db *sqlx.DB) *mux.Router {
 			return
 		}
 	}).Methods("POST")
-	r.HandleFunc("/posts", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-type", "application/json")
 
-		// decoding the request body
-		var postRequest postRequest
-		if err := json.NewDecoder(req.Body).Decode(&postRequest); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-
-		// inserting the post and fetching the resulting id
-		stmt, err := db.PrepareNamed("INSERT INTO posts (body) VALUES (:body) RETURNING id")
-		if err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-		row := stmt.QueryRow(postRequest)
-		var id int
-		if err := row.Scan(&id); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-
-		// writing out the response
-		responseBody := post{ID: id, Body: postRequest.Body}
-		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-	}).Methods("POST")
-	r.HandleFunc("/post/{id:[0-9]+}", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-
-		// fetching the url vars
-		vars := mux.Vars(req)
-		id := vars["id"]
-
-		// query for the post
-		stmt, err := db.Preparex("SELECT id, body FROM posts WHERE id = $1")
-		if err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-		var post post
-		err = stmt.Get(&post, id)
-		if err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-
-		// writing out the response
-		if err := json.NewEncoder(w).Encode(post); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-	}).Methods("GET")
+	// post handler
+	r = PostManager.Init(r, db)
 	return r
 }
 
 func loggingMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// read the request body for logging
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
+		var (
+			body []byte
+			err  error
+		)
+		if body, err = ioutil.ReadAll(req.Body); err != nil {
 			log.WithFields(log.Fields{
 				"url": req.URL,
 				"err": err.Error(),
@@ -146,11 +99,13 @@ func loggingMiddleware(h http.Handler) http.Handler {
 		// re-adding the request body
 		req.Body = customReader{bytes.NewBuffer(body)}
 
-		// passing onto the next middleware
+		// logging the request body
 		log.WithFields(log.Fields{
 			"url":  req.URL,
 			"body": string(body),
 		}).Info("Url hit")
+
+		// passing onto the next middleware
 		h.ServeHTTP(w, req)
 	})
 }
