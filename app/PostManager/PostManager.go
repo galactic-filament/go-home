@@ -52,9 +52,26 @@ func (m manager) get(id int) (p Post, err error) {
 	return p, nil
 }
 
+func (m manager) delete(p Post) (err error) {
+	stmt, err := m.db.Prepare("DELETE FROM posts WHERE id = $1")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(p.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type postRequest struct {
 	Body string `json:"body"`
 }
+
+// DeleteResponse - delete post response body
+type DeleteResponse struct{}
 
 // Init - route handler
 func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
@@ -114,6 +131,38 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 			return
 		}
 	}).Methods("GET")
+	r.HandleFunc("/post/{id:[0-9]+}", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		// fetching the url vars
+		vars := mux.Vars(req)
+		var (
+			id  int
+			err error
+		)
+		if id, err = strconv.Atoi(vars["id"]); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// getting the post
+		var p Post
+		if p, err = m.get(id); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// deleting the post
+		if err = m.delete(p); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+		}
+
+		// writing out the response
+		if err = json.NewEncoder(w).Encode(DeleteResponse{}); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+	}).Methods("DELETE")
 
 	return r
 }

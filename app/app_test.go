@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/ihsw/go-home/app/PostManager"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -168,4 +169,20 @@ func TestGetPost(t *testing.T) {
 	err := json.NewDecoder(w.Body).Decode(&getPostResponse)
 	assert.Nil(t, err, "Could not decode response body")
 	assert.Equal(t, createPostResponse.Body, getPostResponse.Body)
+}
+
+func TestDeletePost(t *testing.T) {
+	// update the test handler with the test runner
+	th.t = t
+
+	// creating a post
+	createPostResponse := createPost(th, post{Body: "Hello, world!"})
+
+	// requesting
+	w := th.testDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
+
+	// asserting that the bodies match
+	var deletePostResponse PostManager.DeleteResponse
+	err := json.NewDecoder(w.Body).Decode(&deletePostResponse)
+	assert.Nil(t, err, "Could not decode response body")
 }
