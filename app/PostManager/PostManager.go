@@ -58,12 +58,26 @@ func (m manager) delete(p Post) (err error) {
 		return err
 	}
 
-	_, err = stmt.Exec(p.ID)
-	if err != nil {
+	if _, err = stmt.Exec(p.ID); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (m manager) update(p Post, pr postRequest) (Post, error) {
+	stmt, err := m.db.Prepare("UPDATE posts SET body = $1 WHERE id = $2")
+	if err != nil {
+		return Post{}, err
+	}
+
+	if _, err := stmt.Exec(pr.Body, p.ID); err != nil {
+		return Post{}, err
+	}
+
+	p.Body = pr.Body
+
+	return p, nil
 }
 
 type postRequest struct {
@@ -163,6 +177,45 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 			return
 		}
 	}).Methods("DELETE")
+	r.HandleFunc("/post/{id:[0-9]+}", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+
+		// fetching the url vars
+		vars := mux.Vars(req)
+		var (
+			id  int
+			err error
+		)
+		if id, err = strconv.Atoi(vars["id"]); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// decoding the request body
+		var pr postRequest
+		if err = json.NewDecoder(req.Body).Decode(&pr); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// getting the post
+		var p Post
+		if p, err = m.get(id); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// updating the post
+		if p, err = m.update(p, pr); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+		}
+
+		// writing out the response
+		if err = json.NewEncoder(w).Encode(p); err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+	}).Methods("PUT")
 
 	return r
 }

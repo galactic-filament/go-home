@@ -70,6 +70,12 @@ func (th testHandler) testPostJSONRequest(dest string, payload io.Reader) *httpt
 	return w
 }
 
+func (th testHandler) testPutJSONRequest(dest string, payload io.Reader) *httptest.ResponseRecorder {
+	w := th.testRequest("PUT", dest, payload)
+	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
+	return w
+}
+
 // global test handler
 var th testHandler
 
@@ -185,4 +191,26 @@ func TestDeletePost(t *testing.T) {
 	var deletePostResponse PostManager.DeleteResponse
 	err := json.NewDecoder(w.Body).Decode(&deletePostResponse)
 	assert.Nil(t, err, "Could not decode response body")
+}
+
+func TestPutPost(t *testing.T) {
+	// update the test handler with the test runner
+	th.t = t
+
+	// creating a post
+	post := post{Body: "Hello, world!"}
+	createPostResponse := createPost(th, post)
+
+	// generating a request payload
+	putPost := PostManager.Post{Body: "Jello, world!"}
+	payload, err := json.Marshal(putPost)
+	assert.Nil(th.t, err, "Could not marshal post")
+
+	// requesting
+	w := th.testPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload))
+
+	// asserting that the bodies match
+	err = json.NewDecoder(w.Body).Decode(&post)
+	assert.Nil(t, err, "Could not decode response body")
+	assert.Equal(t, putPost.Body, post.Body)
 }
