@@ -89,30 +89,29 @@ type DeleteResponse struct{}
 
 // Init - route handler
 func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
-	m := newManager(db)
+	postManager := newManager(db)
 
 	r.HandleFunc("/posts", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
 		// decoding the request body
-		var (
-			pr  postRequest
-			err error
-		)
-		if err = json.NewDecoder(req.Body).Decode(&pr); err != nil {
+		var request postRequest
+		err := json.NewDecoder(req.Body).Decode(&request)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// creating the post
-		var p Post
-		if p, err = m.create(pr); err != nil {
+		post, err := postManager.create(request)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// writing out the response
-		if err := json.NewEncoder(w).Encode(p); err != nil {
+		err = json.NewEncoder(w).Encode(post)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
@@ -122,25 +121,22 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		w.Header().Set("Content-type", "application/json")
 
 		// fetching the url vars
-		vars := mux.Vars(req)
-		var (
-			id  int
-			err error
-		)
-		if id, err = strconv.Atoi(vars["id"]); err != nil {
+		id, err := strconv.Atoi(mux.Vars(req)["id"])
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
-		var p Post
-		if p, err = m.get(id); err != nil {
+		post, err := postManager.get(id)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// writing out the response
-		if err = json.NewEncoder(w).Encode(p); err != nil {
+		err = json.NewEncoder(w).Encode(post)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
@@ -149,30 +145,28 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		w.Header().Set("Content-type", "application/json")
 
 		// fetching the url vars
-		vars := mux.Vars(req)
-		var (
-			id  int
-			err error
-		)
-		if id, err = strconv.Atoi(vars["id"]); err != nil {
+		id, err := strconv.Atoi(mux.Vars(req)["id"])
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
-		var p Post
-		if p, err = m.get(id); err != nil {
+		post, err := postManager.get(id)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// deleting the post
-		if err = m.delete(p); err != nil {
+		err = postManager.delete(post)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 		}
 
 		// writing out the response
-		if err = json.NewEncoder(w).Encode(DeleteResponse{}); err != nil {
+		err = json.NewEncoder(w).Encode(DeleteResponse{})
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
@@ -181,37 +175,36 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		w.Header().Set("Content-type", "application/json")
 
 		// fetching the url vars
-		vars := mux.Vars(req)
-		var (
-			id  int
-			err error
-		)
-		if id, err = strconv.Atoi(vars["id"]); err != nil {
-			Util.WriteJSONErrorResponse(w, err)
-			return
-		}
-
-		// decoding the request body
-		var pr postRequest
-		if err = json.NewDecoder(req.Body).Decode(&pr); err != nil {
+		id, err := strconv.Atoi(mux.Vars(req)["id"])
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
-		var p Post
-		if p, err = m.get(id); err != nil {
+		post, err := postManager.get(id)
+		if err != nil {
+			Util.WriteJSONErrorResponse(w, err)
+			return
+		}
+
+		// decoding the request body
+		var request postRequest
+		err = json.NewDecoder(req.Body).Decode(&request)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// updating the post
-		if p, err = m.update(p, pr); err != nil {
+		post, err = postManager.update(post, request)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 		}
 
 		// writing out the response
-		if err = json.NewEncoder(w).Encode(p); err != nil {
+		err = json.NewEncoder(w).Encode(post)
+		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
 			return
 		}
