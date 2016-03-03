@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/ihsw/go-home/app/DefaultManager"
 	"github.com/ihsw/go-home/app/PostManager"
+	"github.com/ihsw/go-home/app/Util"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +38,7 @@ func (th testHandler) testRequest(method string, dest string, body io.Reader) *h
 
 	// checking for 500 errors
 	if w.Code == http.StatusInternalServerError {
-		var errResponse errorResponse
+		var errResponse Util.ErrorResponse
 		err = json.NewDecoder(w.Body).Decode(&errResponse)
 		assert.Nil(th.t, err, "Could not decode response body")
 		assert.NotNil(th.t, nil, fmt.Sprintf("Response code was 500: %s", errResponse.Error))
@@ -98,7 +100,7 @@ func TestMain(m *testing.M) {
 }
 
 // convenience methods
-func createPost(th testHandler, requestPost post) (post post) {
+func createPost(th testHandler, requestPost PostManager.PostRequest) (post PostManager.Post) {
 	// generating a request payload
 	payload, err := json.Marshal(requestPost)
 	assert.Nil(th.t, err, "Could not marshal post")
@@ -138,7 +140,7 @@ func TestReflection(t *testing.T) {
 	th.t = t
 
 	// generating a request payload
-	requestGreeting := greeting{Greeting: "Hello, world!"}
+	requestGreeting := DefaultManager.GreetingRequest{Greeting: "Hello, world!"}
 	payload, err := json.Marshal(requestGreeting)
 	assert.Nil(t, err, "Could not marshal greeting")
 
@@ -146,7 +148,7 @@ func TestReflection(t *testing.T) {
 	w := th.testPostJSONRequest("/reflection", bytes.NewBuffer(payload))
 
 	// asserting that the request and response match
-	var responseGreeting greeting
+	var responseGreeting DefaultManager.GreetingRequest
 	err = json.NewDecoder(w.Body).Decode(&responseGreeting)
 	assert.Nil(t, err, "Could not decode response body")
 	assert.Equal(t, requestGreeting.Greeting, responseGreeting.Greeting)
@@ -157,7 +159,7 @@ func TestPosts(t *testing.T) {
 	th.t = t
 
 	// creating a post
-	createPost(th, post{Body: "Hello, world!"})
+	createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 }
 
 func TestGetPost(t *testing.T) {
@@ -165,13 +167,13 @@ func TestGetPost(t *testing.T) {
 	th.t = t
 
 	// creating a post
-	createPostResponse := createPost(th, post{Body: "Hello, world!"})
+	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
 	w := th.testGetJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
 
 	// asserting that the bodies match
-	var getPostResponse post
+	var getPostResponse PostManager.Post
 	err := json.NewDecoder(w.Body).Decode(&getPostResponse)
 	assert.Nil(t, err, "Could not decode response body")
 	assert.Equal(t, createPostResponse.Body, getPostResponse.Body)
@@ -182,7 +184,7 @@ func TestDeletePost(t *testing.T) {
 	th.t = t
 
 	// creating a post
-	createPostResponse := createPost(th, post{Body: "Hello, world!"})
+	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
 	w := th.testDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
@@ -198,8 +200,8 @@ func TestPutPost(t *testing.T) {
 	th.t = t
 
 	// creating a post
-	post := post{Body: "Hello, world!"}
-	createPostResponse := createPost(th, post)
+	postRequest := PostManager.PostRequest{Body: "Hello, world!"}
+	createPostResponse := createPost(th, postRequest)
 
 	// generating a request payload
 	putPost := PostManager.Post{Body: "Jello, world!"}
@@ -210,6 +212,7 @@ func TestPutPost(t *testing.T) {
 	w := th.testPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload))
 
 	// asserting that the bodies match
+	var post PostManager.Post
 	err = json.NewDecoder(w.Body).Decode(&post)
 	assert.Nil(t, err, "Could not decode response body")
 	assert.Equal(t, putPost.Body, post.Body)

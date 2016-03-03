@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/ihsw/go-home/app/DefaultManager"
 	"github.com/ihsw/go-home/app/PostManager"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -13,69 +13,18 @@ import (
 	"net/http"
 )
 
-type greeting struct {
-	Greeting string `json:"greeting"`
-}
-
-type postRequest struct {
-	Body string `json:"body"`
-}
-
-type post struct {
-	ID   int    `json:"id"`
-	Body string `json:"body"`
-}
-
 type customReader struct {
 	*bytes.Buffer
 }
 
-type errorResponse struct {
-	Error string `json:"error"`
-}
-
 func (r customReader) Close() error { return nil }
-
-func writeJSONErrorResponse(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	errResponse := errorResponse{Error: err.Error()}
-	if err := json.NewEncoder(w).Encode(errResponse); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Could not encode error response body")
-		return
-	}
-	return
-}
 
 func getHandler(db *sqlx.DB) *mux.Router {
 	r := mux.NewRouter()
 
-	// misc route endpoints
-	r.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "Hello, world!")
-	})
-	r.HandleFunc("/ping", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "Pong")
-	})
-	r.HandleFunc("/reflection", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-
-		// decoding the request body
-		var greeting greeting
-		if err := json.NewDecoder(req.Body).Decode(&greeting); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-
-		// writing out the response
-		if err := json.NewEncoder(w).Encode(greeting); err != nil {
-			writeJSONErrorResponse(w, err)
-			return
-		}
-	}).Methods("POST")
-
-	// post handler
+	// route handlers
 	r = PostManager.Init(r, db)
+	r = DefaultManager.Init(r)
 	return r
 }
 
