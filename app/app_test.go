@@ -7,79 +7,16 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/ihsw/go-home/app/DefaultManager"
 	"github.com/ihsw/go-home/app/PostManager"
-	"github.com/ihsw/go-home/app/Util"
+	"github.com/ihsw/go-home/app/TestHandler"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 )
 
-// test handler
-type testHandler struct {
-	db *sqlx.DB
-	t  *testing.T
-}
-
-func (th testHandler) testRequest(method string, dest string, body io.Reader) *httptest.ResponseRecorder {
-	// fetching the request router
-	r := getHandler(th.db)
-
-	// generating a request to test it
-	req, err := http.NewRequest(method, dest, body)
-	assert.Nil(th.t, err, fmt.Sprintf("Could not create new %s %s request", method, dest))
-
-	// serving up a single request and recording the response
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// checking for 500 errors
-	if w.Code == http.StatusInternalServerError {
-		var errResponse Util.ErrorResponse
-		err = json.NewDecoder(w.Body).Decode(&errResponse)
-		assert.Nil(th.t, err, "Could not decode response body")
-		assert.NotNil(th.t, nil, fmt.Sprintf("Response code was 500: %s", errResponse.Error))
-		return w
-	}
-
-	// asserting that it worked properly
-	assert.Equal(th.t, http.StatusOK, w.Code, "Response code was not 200")
-	return w
-}
-
-func (th testHandler) testGetRequest(dest string) *httptest.ResponseRecorder {
-	return th.testRequest("GET", dest, nil)
-}
-
-func (th testHandler) testGetJSONRequest(dest string) *httptest.ResponseRecorder {
-	w := th.testRequest("GET", dest, nil)
-	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
-	return w
-}
-
-func (th testHandler) testDeleteJSONRequest(dest string) *httptest.ResponseRecorder {
-	w := th.testRequest("DELETE", dest, nil)
-	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
-	return w
-}
-
-func (th testHandler) testPostJSONRequest(dest string, payload io.Reader) *httptest.ResponseRecorder {
-	w := th.testRequest("POST", dest, payload)
-	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
-	return w
-}
-
-func (th testHandler) testPutJSONRequest(dest string, payload io.Reader) *httptest.ResponseRecorder {
-	w := th.testRequest("PUT", dest, payload)
-	assert.Equal(th.t, "application/json", w.Header().Get("Content-type"), "Response content-type was not application/json")
-	return w
-}
-
 // global test handler
-var th testHandler
+var th TestHandler.TestHandler
 
 // main
 func TestMain(m *testing.M) {
@@ -89,7 +26,7 @@ func TestMain(m *testing.M) {
 	}
 
 	var err error
-	th.db, err = sqlx.Connect(
+	th.Db, err = sqlx.Connect(
 		"postgres",
 		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", hostname),
 	)
@@ -100,18 +37,18 @@ func TestMain(m *testing.M) {
 }
 
 // convenience methods
-func createPost(th testHandler, requestPost PostManager.PostRequest) (post PostManager.Post) {
+func createPost(th TestHandler.TestHandler, requestPost PostManager.PostRequest) (post PostManager.Post) {
 	// generating a request payload
 	payload, err := json.Marshal(requestPost)
-	assert.Nil(th.t, err, "Could not marshal post")
+	assert.Nil(th.T, err, "Could not marshal post")
 
 	// requesting
-	w := th.testPostJSONRequest("/posts", bytes.NewBuffer(payload))
+	w := th.TestPostJSONRequest("/posts", bytes.NewBuffer(payload))
 
 	// asserting that the post id is returned
 	err = json.NewDecoder(w.Body).Decode(&post)
-	assert.Nil(th.t, err, "Could not decode response body")
-	assert.NotNil(th.t, post.ID, "Post id is nil")
+	assert.Nil(th.T, err, "Could not decode response body")
+	assert.NotNil(th.T, post.ID, "Post id is nil")
 
 	return post
 }
@@ -119,25 +56,25 @@ func createPost(th testHandler, requestPost PostManager.PostRequest) (post PostM
 // actual tests
 func TestHomepage(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// attempt a request
-	w := th.testGetRequest("/")
+	w := th.TestGetRequest("/")
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
 
 func TestPing(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// attempt a request
-	w := th.testGetRequest("/ping")
+	w := th.TestGetRequest("/ping")
 	assert.Equal(t, "Pong", w.Body.String())
 }
 
 func TestReflection(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// generating a request payload
 	requestGreeting := DefaultManager.GreetingRequest{Greeting: "Hello, world!"}
@@ -145,7 +82,7 @@ func TestReflection(t *testing.T) {
 	assert.Nil(t, err, "Could not marshal greeting")
 
 	// requesting
-	w := th.testPostJSONRequest("/reflection", bytes.NewBuffer(payload))
+	w := th.TestPostJSONRequest("/reflection", bytes.NewBuffer(payload))
 
 	// asserting that the request and response match
 	var responseGreeting DefaultManager.GreetingRequest
@@ -156,7 +93,7 @@ func TestReflection(t *testing.T) {
 
 func TestPosts(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// creating a post
 	createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
@@ -164,13 +101,13 @@ func TestPosts(t *testing.T) {
 
 func TestGetPost(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// creating a post
 	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
-	w := th.testGetJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
+	w := th.TestGetJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
 
 	// asserting that the bodies match
 	var getPostResponse PostManager.Post
@@ -181,13 +118,13 @@ func TestGetPost(t *testing.T) {
 
 func TestDeletePost(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// creating a post
 	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
-	w := th.testDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
+	w := th.TestDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
 
 	// asserting that the bodies match
 	var deletePostResponse PostManager.DeleteResponse
@@ -197,7 +134,7 @@ func TestDeletePost(t *testing.T) {
 
 func TestPutPost(t *testing.T) {
 	// update the test handler with the test runner
-	th.t = t
+	th.T = t
 
 	// creating a post
 	postRequest := PostManager.PostRequest{Body: "Hello, world!"}
@@ -206,10 +143,10 @@ func TestPutPost(t *testing.T) {
 	// generating a request payload
 	putPost := PostManager.Post{Body: "Jello, world!"}
 	payload, err := json.Marshal(putPost)
-	assert.Nil(th.t, err, "Could not marshal post")
+	assert.Nil(th.T, err, "Could not marshal post")
 
 	// requesting
-	w := th.testPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload))
+	w := th.TestPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload))
 
 	// asserting that the bodies match
 	var post PostManager.Post

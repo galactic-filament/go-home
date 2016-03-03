@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
-	"github.com/ihsw/go-home/app/DefaultManager"
-	"github.com/ihsw/go-home/app/PostManager"
+	"github.com/ihsw/go-home/app/RouteHandler"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"io/ioutil"
@@ -18,15 +16,6 @@ type customReader struct {
 }
 
 func (r customReader) Close() error { return nil }
-
-func getHandler(db *sqlx.DB) *mux.Router {
-	r := mux.NewRouter()
-
-	// route handlers
-	r = PostManager.Init(r, db)
-	r = DefaultManager.Init(r)
-	return r
-}
 
 func loggingMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -70,7 +59,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	err = http.ListenAndServe(":80", loggingMiddleware(getHandler(db)))
+	err = http.ListenAndServe(":80", loggingMiddleware(RouteHandler.GetHandler(db)))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
