@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"os"
 	"testing"
 )
@@ -43,7 +44,7 @@ func createPost(th TestHandler.TestHandler, requestPost PostManager.PostRequest)
 	assert.Nil(th.T, err, "Could not marshal post")
 
 	// requesting
-	w := th.TestPostJSONRequest("/posts", bytes.NewBuffer(payload))
+	w := th.TestPostJSONRequest("/posts", bytes.NewBuffer(payload), http.StatusCreated)
 
 	// asserting that the post id is returned
 	err = json.NewDecoder(w.Body).Decode(&post)
@@ -59,7 +60,7 @@ func TestHomepage(t *testing.T) {
 	th.T = t
 
 	// attempt a request
-	w := th.TestGetRequest("/")
+	w := th.TestGetRequest("/", http.StatusOK)
 	assert.Equal(t, "Hello, world!", w.Body.String())
 }
 
@@ -68,7 +69,7 @@ func TestPing(t *testing.T) {
 	th.T = t
 
 	// attempt a request
-	w := th.TestGetRequest("/ping")
+	w := th.TestGetRequest("/ping", http.StatusOK)
 	assert.Equal(t, "Pong", w.Body.String())
 }
 
@@ -82,7 +83,7 @@ func TestReflection(t *testing.T) {
 	assert.Nil(t, err, "Could not marshal greeting")
 
 	// requesting
-	w := th.TestPostJSONRequest("/reflection", bytes.NewBuffer(payload))
+	w := th.TestPostJSONRequest("/reflection", bytes.NewBuffer(payload), http.StatusOK)
 
 	// asserting that the request and response match
 	var responseGreeting DefaultManager.GreetingRequest
@@ -107,7 +108,7 @@ func TestGetPost(t *testing.T) {
 	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
-	w := th.TestGetJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
+	w := th.TestGetJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), http.StatusOK)
 
 	// asserting that the bodies match
 	var getPostResponse PostManager.Post
@@ -124,7 +125,7 @@ func TestDeletePost(t *testing.T) {
 	createPostResponse := createPost(th, PostManager.PostRequest{Body: "Hello, world!"})
 
 	// requesting
-	w := th.TestDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID))
+	w := th.TestDeleteJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), http.StatusOK)
 
 	// asserting that the bodies match
 	var deletePostResponse PostManager.DeleteResponse
@@ -146,7 +147,7 @@ func TestPutPost(t *testing.T) {
 	assert.Nil(th.T, err, "Could not marshal post")
 
 	// requesting
-	w := th.TestPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload))
+	w := th.TestPutJSONRequest(fmt.Sprintf("/post/%d", createPostResponse.ID), bytes.NewBuffer(payload), http.StatusOK)
 
 	// asserting that the bodies match
 	var post PostManager.Post
