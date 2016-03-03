@@ -40,6 +40,7 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		}
 
 		// writing out the response
+		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(post)
 		if err != nil {
 			Util.WriteJSONErrorResponse(w, err)
