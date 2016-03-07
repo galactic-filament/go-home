@@ -4,20 +4,14 @@ db:
 base:
   image: ihsw/go-home
   environment:
-    - ENV=local
+    - DATABASE_HOST=Db
 test-base:
   extends:
     service: base
   command: ./src/github.com/ihsw/go-home/app/bin/run-tests
 
-web-test:
-  extends:
-    service: base
-  links:
-    - db
-
 test:
   extends:
     service: test-base
   links:
-    - db
+    - db:Db

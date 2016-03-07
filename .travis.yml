@@ -6,7 +6,7 @@ services:
   - postgresql
 
 env:
-  - ENV=travis
+  - DATABASE_HOST=localhost
 before_script:
   - go vet github.com/ihsw/go-home/app/...
   - psql -f ./db/container-files/docker-entrypoint-initdb.d/db.sql -U postgres

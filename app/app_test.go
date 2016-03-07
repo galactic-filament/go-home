@@ -21,15 +21,10 @@ var th TestHandler.TestHandler
 
 // main
 func TestMain(m *testing.M) {
-	hostname := "db"
-	if os.Getenv("ENV") == "travis" {
-		hostname = "localhost"
-	}
-
 	var err error
 	th.Db, err = sqlx.Connect(
 		"postgres",
-		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", hostname),
+		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", os.Getenv("DATABASE_HOST")),
 	)
 	if err != nil {
 		log.Fatal(err.Error())

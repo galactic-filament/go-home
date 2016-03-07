@@ -53,7 +53,7 @@ func main() {
 
 	db, err := sqlx.Connect(
 		"postgres",
-		"postgres://postgres@db/postgres?sslmode=disable",
+		"postgres://postgres@Db/postgres?sslmode=disable",
 	)
 	if err != nil {
 		log.Fatal(err.Error())
