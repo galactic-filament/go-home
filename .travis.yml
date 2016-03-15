@@ -1,9 +1,10 @@
-sudo: false
+sudo: required
 language: go
 go:
 - 1.5
 services:
 - postgresql
+- docker
 
 env:
   matrix:
