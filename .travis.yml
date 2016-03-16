@@ -20,4 +20,4 @@ before_script:
 script:
 - go test github.com/ihsw/go-home/app/...
 after_success:
-- test $TRAVIS_GO_VERSION == "1.5" && ../bin/docker-push ihsw/go-home
+- test $TRAVIS_GO_VERSION == "1.5" && ./bin/docker-push ihsw/go-home
