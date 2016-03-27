@@ -15,3 +15,11 @@ test:
     service: test-base
   links:
     - db:Db
+
+web:
+  extends:
+    service: base
+  links:
+    - db:Db
+  ports:
+    - 80:80
