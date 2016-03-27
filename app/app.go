@@ -48,9 +48,15 @@ func loggingMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func ajaxMiddleware(h http.Handler) http.Handler {
+func corsMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if req.Method == "OPTIONS" {
+			return
+		}
 
 		// passing onto the next middleware
 		h.ServeHTTP(w, req)
@@ -68,7 +74,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	err = http.ListenAndServe(":80", loggingMiddleware(ajaxMiddleware(RouteHandler.GetHandler(db))))
+	err = http.ListenAndServe(":80", loggingMiddleware(corsMiddleware(RouteHandler.GetHandler(db))))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
