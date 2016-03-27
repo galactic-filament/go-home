@@ -48,6 +48,15 @@ func loggingMiddleware(h http.Handler) http.Handler {
 	})
 }
 
+func ajaxMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// passing onto the next middleware
+		h.ServeHTTP(w, req)
+	})
+}
+
 func main() {
 	log.Info("Starting up")
 
@@ -59,7 +68,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	err = http.ListenAndServe(":80", loggingMiddleware(RouteHandler.GetHandler(db)))
+	err = http.ListenAndServe(":80", loggingMiddleware(ajaxMiddleware(RouteHandler.GetHandler(db))))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
