@@ -3,12 +3,16 @@ package main
 import (
 	"bytes"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/ihsw/go-home/app/RouteHandler"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"io/ioutil"
 	"net/http"
+
+	"os"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/ihsw/go-home/app/RouteHandler"
+	"github.com/ihsw/go-home/app/Util"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type customReader struct {
@@ -64,11 +68,20 @@ func corsMiddleware(h http.Handler) http.Handler {
 }
 
 func main() {
-	log.Info("Starting up")
+	envVars, errorMessages := Util.ValidateEnvironment()
+	if errorMessages != nil {
+		for _, message := range errorMessages {
+			fmt.Println(message)
+		}
 
+		os.Exit(1)
+		return
+	}
+
+	log.Info("Starting up")
 	db, err := sqlx.Connect(
 		"postgres",
-		"postgres://postgres@Db/postgres?sslmode=disable",
+		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", envVars["DATABASE_HOST"]),
 	)
 	if err != nil {
 		log.Fatal(err.Error())
