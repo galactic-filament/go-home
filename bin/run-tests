@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./bin/validateEnvironment \
+  && go test github.com/ihsw/go-home/app/...

@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
 	"os"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/ihsw/go-home/app/RouteHandler"
-	"github.com/ihsw/go-home/app/Util"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -68,20 +66,10 @@ func corsMiddleware(h http.Handler) http.Handler {
 }
 
 func main() {
-	envVars, errorMessages := Util.ValidateEnvironment()
-	if errorMessages != nil {
-		for _, message := range errorMessages {
-			fmt.Println(message)
-		}
-
-		os.Exit(1)
-		return
-	}
-
 	log.Info("Starting up")
 	db, err := sqlx.Connect(
 		"postgres",
-		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", envVars["DATABASE_HOST"]),
+		fmt.Sprintf("postgres://postgres@%s/postgres?sslmode=disable", os.Getenv("DATABASE_HOST")),
 	)
 	if err != nil {
 		log.Fatal(err.Error())

@@ -1,15 +1,23 @@
 FROM golang
 
 EXPOSE 80
+ENV APP_PORT 80
 
-RUN apt-get update -q \
-  && apt-get install -yq netcat
+# add app dir
+ENV APP_DIR ./src/go-home
+COPY . $APP_DIR
 
-ENV APP_PATH github.com/ihsw/go-home/app
-ADD ./app ./src/$APP_PATH
-RUN go get ./src/$APP_PATH/... \
-  && go get -t $APP_PATH \
-  && go install $APP_PATH
-ADD ./app/bin/run-app ./bin/run-app
+# add log dir
+ENV APP_LOG_DIR /var/log/app
+VOLUME $APP_LOG_DIR
 
-CMD ["./bin/run-app"]
+# build app
+ENV APP_PROJECT go-home/app
+ENV VALIDATE_ENVIRONMENT_PROJECT go-home/validateEnvironment
+RUN go get ./src/$APP_PROJECT/... \
+  && go get -t ./src/$APP_PROJECT \
+  && go get ./src/$VALIDATE_ENVIRONMENT_PROJECT/... \
+  && go install $APP_PROJECT \
+  && go install $VALIDATE_ENVIRONMENT_PROJECT
+
+CMD ["$APP_DIR/bin/run-app"]
