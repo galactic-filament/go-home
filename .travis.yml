@@ -20,6 +20,7 @@ before_script:
 - mkdir $APP_LOG_DIR
 script:
 - go install github.com/ihsw/go-home/validateEnvironment
+- find . | grep -i validateEnvironment
 - ./bin/validateEnvironment && go test github.com/ihsw/go-home/app/...
 after_success:
 - test $TRAVIS_GO_VERSION == "1.5" && git clean -xfd && ../bin/docker-push ihsw/go-home
