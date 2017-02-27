@@ -20,4 +20,4 @@ RUN go get ./src/$APP_PROJECT/... \
   && go install $APP_PROJECT \
   && go install $VALIDATE_ENVIRONMENT_PROJECT
 
-CMD ["$APP_DIR/bin/run-app"]
+CMD ["./src/go-home/bin/run-app"]
