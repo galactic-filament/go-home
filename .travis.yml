@@ -15,11 +15,10 @@ env:
   - secure: QYgLHWBO0cerCzx4+aTE8189sRi27uEKhevXwmWObhtX06kSEN3kClNWhWk8HlH+As1SMtG1L5LPTVAZeF91t4/aGgLA4CrX0AP8cL4X4J5OMbwb7uzGlBRFyRgzb6lce4SLsnPOUKhlQ+8Z+P6dgX1qXyjzqUe/9nXyjEdttG1bUk1ZrVBoAnSlbsTuFrdTffcA0q++fSEJMesrW2FQN2tvLTbHgEisstEsnrxao3Jz7WFHfDOwgQK1IE6gUAm083fb8AlMaU4C07wVjjS1aFoJtK54V4BCzIwr9aTxYFaMk/1iRm5W9V7DWnkpEhcKuAwTHLgULWBrES8WSt4oXLXtVfb8hUCiwLkjIqXCGGNRJlQEeTkB9yfJAhLCVyY5HqlFeaFNjF93hMdoA3LUShHGU4VKsWW39csOLNp1DK5dFzZ6QiEIImGiUocOGqoqJVXVg8OVGFQF+OqdozdDtGe0rV5XhbYz4Ml3hIUX6GgjxQOgZFFmBabmgIw8LfqqwrZ+nqh0pnPKlJQ05F65ukKm3864gMvK8pQ188LqgwU06/AIkyPgZtjQxX5K1gZ601otiXVN/k/DLJKFSgUhnYf/OjGCKl+TcxFeCvkhmnnsL3DBKFAC70WSlbQydEtpijP5NOMoL2DwORFa36GK9Iv3fmlmmfTJD8Jb8LxfaIM=
   - secure: cRqw7xTLZU7L1zApsIkKdxKo+xcjB2jyq6LvScc0Ew31rUY3+hGgat38Wq26SooV4P7Z3/x6yWuI2O4mvJygSCLbKLCrtYmAWyNHAEHJqwzUUuar+nCZn3UH5lfH+FC5MdQeoE4STziaZc9Hb7ctnu2EV6CHfv3zX5eR0LUx1GVsDGiQRFMOuhrpAZAb/J+iMlqVF7HTsicgduaNF1KPTluQCtFniW2hAM+jMKjX3fQ8J7z+NR8qh5OuNYbl7vanPTK6CxmTVo64g3KBe8B9LK6ZW6flwtoujC6e3/W1m1sgY3tIlJN4HA5rMY75hWAc6pCp3kKNaKUa5CT+GfF8oIvDHHaJXqV48VVmcqp7zpRUc8ytxINMKndLBnSeXspVa6osUG5n156Wr+RElvOarrlFnEJTJ/b9zV6wtFEmhAOKA18tT7bvs4CXdSxU1yh3Vmu7c4/s04Qv1Ck1jZXrYYIhzUwm0+54x/sBafNNQDuEZGPK84RUaT/KfVeAttgV9d4TqhItgsOaLNWpZqIB+pVqX2bCmQIx7mOGN3krZ7nbGhNeX6o3XWw6I7X/tXkT4vgO1eXz+ikf/CHMGV/Jj3ydlsQ/NkFgEBAj34+6bMURpSYHbkaMhWzjDvWQw9vwaW/7zrndgjWz3vyG3DdGKckvz8oK8w0mGju0wEadQ8Q=
 before_script:
-- go vet github.com/ihsw/go-home/app/...
+- go vet app/...
 - psql -f ./db/container-files/docker-entrypoint-initdb.d/db.sql -U postgres
 - mkdir $APP_LOG_DIR
 script:
-- find .
-- ./src/github.com/ihsw/go-home/run-tests
+- go test github.com/ihsw/go-home/app/...
 after_success:
 - test $TRAVIS_GO_VERSION == "1.5" && git clean -xfd && ../bin/docker-push ihsw/go-home
