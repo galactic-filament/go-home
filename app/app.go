@@ -8,7 +8,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/ihsw/go-home/app/RouteHandler"
+	"github.com/galactic-filament/go-home/app/RouteHandler"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )

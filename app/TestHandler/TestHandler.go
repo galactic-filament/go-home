@@ -3,14 +3,15 @@ package TestHandler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ihsw/go-home/app/RouteHandler"
-	"github.com/ihsw/go-home/app/Util"
-	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/galactic-filament/go-home/app/RouteHandler"
+	"github.com/galactic-filament/go-home/app/Util"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestHandler - context for running tests

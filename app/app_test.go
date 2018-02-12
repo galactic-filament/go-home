@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/ihsw/go-home/app/DefaultManager"
-	"github.com/ihsw/go-home/app/PostManager"
-	"github.com/ihsw/go-home/app/TestHandler"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/galactic-filament/go-home/app/DefaultManager"
+	"github.com/galactic-filament/go-home/app/PostManager"
+	"github.com/galactic-filament/go-home/app/TestHandler"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/stretchr/testify/assert"
 )
 
 // global test handler
