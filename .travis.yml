@@ -19,6 +19,6 @@ before_script:
 - psql -f ./db/container-files/docker-entrypoint-initdb.d/db.sql -U postgres
 - mkdir -p $APP_LOG_DIR
 script:
-- go test github.com/ihsw/go-home/app/...
+- go test github.com/galactic-filament/go-home/app/...
 after_success:
 - test $TRAVIS_GO_VERSION == "1.5" && git clean -xfd && ../bin/docker-push ihsw/go-home
