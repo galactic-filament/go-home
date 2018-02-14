@@ -19,6 +19,6 @@ before_script:
 - mkdir -p $APP_LOG_DIR
 - go get github.com/mattn/goveralls
 script:
-- ./bin/goveralls -package github.com/galactic-filament/go-home/app/... -service=travis-ci
+- $GOPATH/bin/goveralls -package github.com/galactic-filament/go-home/app/... -service=travis-ci
 after_success:
 - git clean -xfd && ../bin/docker-push ihsw/go-home
