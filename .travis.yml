@@ -19,9 +19,6 @@ before_script:
 - mkdir -p $APP_LOG_DIR
 - go get github.com/mattn/goveralls
 script:
-- go vet app/...
-- ./src/github.com/galactic-filament/go-home/bin/run-tests
-- go test -cover -covermode=count -coverprofile=coverage.out github.com/galactic-filament/go-home/app
-- ./bin/goveralls -coverprofile=./coverage.out -service=travis-ci
+- ./bin/goveralls -package github.com/galactic-filament/go-home/app/... -service=travis-ci
 after_success:
-- test $TRAVIS_GO_VERSION == "1.5" && git clean -xfd && ../bin/docker-push ihsw/go-home
+- git clean -xfd && ../bin/docker-push ihsw/go-home
