@@ -1,4 +1,4 @@
 #!/bin/bash
 
 ./bin/validateEnvironment \
-  && go test github.com/ihsw/go-home/app/...
+  && go test -cover -covermode=count -coverprofile=coverage.out github.com/galactic-filament/go-home/app
