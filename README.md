@@ -21,9 +21,9 @@ Test Coverage | [Goveralls](https://github.com/mattn/goveralls)
 - [x] Database access
 - [x] Request logging to /srv/app/log/app.log
 - [x] Unit tests
-- [ ] Unit test coverage reporting
+- [x] Unit test coverage reporting
 - [x] Automated testing using TravisCI
-- [ ] Automated coverage reporting using Coveralls
+- [x] Automated coverage reporting using Coveralls
 - [ ] CRUD routes for user management
 - [ ] Password encryption using bcrypt
 - [ ] Routes protected via HTTP authentication
