@@ -8,7 +8,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/galactic-filament/go-home/app/RouteHandler"
+	"github.com/galactic-filament/go-home/app/routehandler"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -75,7 +75,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	err = http.ListenAndServe(":80", loggingMiddleware(corsMiddleware(RouteHandler.GetHandler(db))))
+	err = http.ListenAndServe(":80", loggingMiddleware(corsMiddleware(routehandler.GetHandler(db))))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

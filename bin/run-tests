@@ -1,4 +1,32 @@
-#!/bin/bash
+#! /bin/bash
 
-./bin/validateEnvironment \
-  && go test -cover -covermode=count -coverprofile=coverage.out github.com/galactic-filament/go-home/app
+# setting env vars
+export APP_PORT=80
+export APP_LOG_DIR=./logs
+export DATABASE_HOST=localhost
+
+# starting up resources
+docker-compose -f ./src/github.com/galactic-filament/go-home/docker-compose.yml up -d db
+
+# creating coverage dir
+COVERAGE_DIR=./coverage
+mkdir -p $COVERAGE_DIR
+
+# creating the initial coverage file
+FULL=$COVERAGE_DIR/full.cov
+echo 'mode: count' > $FULL
+
+# running tests against all packages
+COUNTER=0
+PACKAGES=`go list ./src/github.com/galactic-filament/go-home/app/...`
+for package in $PACKAGES; do
+    FILEPATH=./coverage/coverage-$COUNTER.out
+    go test -covermode=count -coverprofile=$FILEPATH $package
+
+    tail -q -n +2 $FILEPATH >> $FULL
+
+    ((COUNTER++))
+done
+
+# generating an html report
+go tool cover -html $FULL -o $COVERAGE_DIR/full.html

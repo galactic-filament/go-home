@@ -1,4 +1,4 @@
-package PostManager
+package postmanager
 
 import (
 	"github.com/jmoiron/sqlx"

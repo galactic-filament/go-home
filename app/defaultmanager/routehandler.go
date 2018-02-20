@@ -1,11 +1,11 @@
-package DefaultManager
+package defaultmanager
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/galactic-filament/go-home/app/Util"
+	"github.com/galactic-filament/go-home/app/util"
 	"github.com/gorilla/mux"
 )
 
@@ -28,13 +28,13 @@ func Init(r *mux.Router) *mux.Router {
 		// decoding the request body
 		var greeting GreetingRequest
 		if err := json.NewDecoder(req.Body).Decode(&greeting); err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// writing out the response
 		if err := json.NewEncoder(w).Encode(greeting); err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("POST")

@@ -1,8 +1,8 @@
-package RouteHandler
+package routehandler
 
 import (
-	"github.com/galactic-filament/go-home/app/DefaultManager"
-	"github.com/galactic-filament/go-home/app/PostManager"
+	"github.com/galactic-filament/go-home/app/defaultmanager"
+	"github.com/galactic-filament/go-home/app/postmanager"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
@@ -12,7 +12,7 @@ func GetHandler(db *sqlx.DB) *mux.Router {
 	r := mux.NewRouter()
 
 	// route handlers
-	r = PostManager.Init(r, db)
-	r = DefaultManager.Init(r)
+	r = postmanager.Init(r, db)
+	r = defaultmanager.Init(r)
 	return r
 }

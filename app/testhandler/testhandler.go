@@ -1,4 +1,4 @@
-package TestHandler
+package testhandler
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/galactic-filament/go-home/app/RouteHandler"
-	"github.com/galactic-filament/go-home/app/Util"
+	"github.com/galactic-filament/go-home/app/routehandler"
+	"github.com/galactic-filament/go-home/app/util"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ type TestHandler struct {
 
 func (th TestHandler) testRequest(method string, dest string, body io.Reader, status int) *httptest.ResponseRecorder {
 	// fetching the request router
-	r := RouteHandler.GetHandler(th.Db)
+	r := routehandler.GetHandler(th.Db)
 
 	// generating a request to test it
 	req, err := http.NewRequest(method, dest, body)
@@ -34,7 +34,7 @@ func (th TestHandler) testRequest(method string, dest string, body io.Reader, st
 
 	// checking for 500 errors
 	if w.Code == http.StatusInternalServerError {
-		var errResponse Util.ErrorResponse
+		var errResponse util.ErrorResponse
 		err = json.NewDecoder(w.Body).Decode(&errResponse)
 		assert.Nil(th.T, err, "Could not decode response body")
 		assert.NotNil(th.T, nil, fmt.Sprintf("Response code was 500: %s", errResponse.Error))

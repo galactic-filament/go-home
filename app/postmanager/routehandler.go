@@ -1,11 +1,11 @@
-package PostManager
+package postmanager
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/galactic-filament/go-home/app/Util"
+	"github.com/galactic-filament/go-home/app/util"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
@@ -29,14 +29,14 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		var request PostRequest
 		err := json.NewDecoder(req.Body).Decode(&request)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// creating the post
 		post, err := postManager.create(request)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(post)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("POST")
@@ -55,21 +55,21 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		// fetching the url vars
 		id, err := strconv.Atoi(mux.Vars(req)["id"])
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
 		post, err := postManager.get(id)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// writing out the response
 		err = json.NewEncoder(w).Encode(post)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("GET")
@@ -79,27 +79,27 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		// fetching the url vars
 		id, err := strconv.Atoi(mux.Vars(req)["id"])
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
 		post, err := postManager.get(id)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// deleting the post
 		err = postManager.delete(post)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 		}
 
 		// writing out the response
 		err = json.NewEncoder(w).Encode(DeleteResponse{})
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("DELETE")
@@ -109,14 +109,14 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		// fetching the url vars
 		id, err := strconv.Atoi(mux.Vars(req)["id"])
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// getting the post
 		post, err := postManager.get(id)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
@@ -124,20 +124,20 @@ func Init(r *mux.Router, db *sqlx.DB) *mux.Router {
 		var request PostRequest
 		err = json.NewDecoder(req.Body).Decode(&request)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 
 		// updating the post
 		post, err = postManager.update(post, request)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 		}
 
 		// writing out the response
 		err = json.NewEncoder(w).Encode(post)
 		if err != nil {
-			Util.WriteJSONErrorResponse(w, err)
+			util.WriteJSONErrorResponse(w, err)
 			return
 		}
 	}).Methods("PUT")
