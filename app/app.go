@@ -13,20 +13,19 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type customReader struct {
-	*bytes.Buffer
-}
+func readBody(req *http.Request) ([]byte, error) {
+	if req.Body == nil {
+		return []byte{}, nil
+	}
 
-func (r customReader) Close() error { return nil }
+	return ioutil.ReadAll(req.Body)
+}
 
 func loggingMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// read the request body for logging
-		var (
-			body []byte
-			err  error
-		)
-		if body, err = ioutil.ReadAll(req.Body); err != nil {
+		body, err := readBody(req)
+		if err != nil {
 			log.WithFields(log.Fields{
 				"url": req.URL,
 				"err": err.Error(),
@@ -36,8 +35,10 @@ func loggingMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		// re-adding the request body
-		req.Body = customReader{bytes.NewBuffer(body)}
+		// optionally re-adding the request body
+		if len(body) > 0 {
+			req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		}
 
 		// logging the request body
 		log.WithFields(log.Fields{
