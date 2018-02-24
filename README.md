@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/galactic-filament/go-home.svg?branch=master)](https://travis-ci.org/galactic-filament/go-home)
 [![Go Report Card](https://goreportcard.com/badge/github.com/galactic-filament/go-home)](https://goreportcard.com/report/github.com/galactic-filament/go-home)
-[![Coverage Status](https://coveralls.io/repos/github/galactic-filament/go-home/badge.svg?branch=)](https://coveralls.io/github/galactic-filament/go-home?branch=)
+[![Coverage Status](https://coveralls.io/repos/github/galactic-filament/go-home/badge.svg?branch=)](https://coveralls.io/github/galactic-filament/go-home?branch=master)
 
 ## Libraries
 
