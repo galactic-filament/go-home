@@ -20,5 +20,5 @@ before_script:
 - go get github.com/mattn/goveralls
 script:
 - $GOPATH/bin/goveralls -package github.com/galactic-filament/go-home/app/... -service=travis-ci
-after_success:
-- git clean -xfd && ../bin/docker-push ihsw/go-home
+- git clean -xfd && docker build -t ihsw/go-home ../
+- ../bin/docker-push ihsw/go-home

@@ -1,7 +1,6 @@
 #! /bin/bash
 
 export REPO=$1
-docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS \
-  && docker build -t $REPO ../ \
+docker login -u $DOCKER_USER -p $DOCKER_PASS \
   && docker push $REPO \
   && echo "docker-push success"
