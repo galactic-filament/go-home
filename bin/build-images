@@ -1,4 +1,0 @@
-#! /bin/bash
-
-docker build -t ihsw/go-home . \
-  && docker build -t ihsw/go-home-db ./db
